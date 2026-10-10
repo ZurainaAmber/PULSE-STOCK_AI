@@ -1,0 +1,68 @@
+sku,product,category,size,selling_price,margin_pct
+Z001,Cola 750ml,Beverages,1 pack,299,0.24
+Z002,Lemon Soda 750ml,Beverages,1 pack,20,0.18
+Z003,Mango Drink 1L,Beverages,1 unit,20,0.09
+Z004,Packaged Water 1L,Beverages,250ml,60,0.23
+Z005,Energy Drink 250ml,Beverages,1 pack,40,0.26
+Z006,Iced Tea 500ml,Beverages,1 unit,149,0.14
+Z007,Orange Fizz 750ml,Beverages,1 unit,60,0.16
+Z008,Cold Coffee 200ml,Beverages,500ml,149,0.2
+Z009,Potato Chips Classic,Snacks,1 unit,499,0.18
+Z010,Masala Chips,Snacks,1 unit,20,0.24
+Z011,Nachos,Snacks,1 pack,99,0.28
+Z012,Multigrain Puffs 60g,Snacks,1kg,499,0.15
+Z013,Salted Peanuts,Snacks,500ml,60,0.29
+Z014,Popcorn,Snacks,250ml,60,0.26
+Z015,Bhujia 200g,Snacks,500ml,149,0.08
+Z016,Cookies,Snacks,500ml,20,0.1
+Z017,Cream Biscuits,Snacks,250ml,499,0.09
+Z018,Chocolate Bar,Snacks,1kg,299,0.11
+Z019,Milk 1L,Dairy,1kg,149,0.17
+Z020,Milk 500ml,Dairy,500ml,299,0.12
+Z021,Curd 400g,Dairy,1 unit,60,0.13
+Z022,Paneer 200g,Dairy,1 unit,99,0.2
+Z023,Butter 100g,Dairy,250ml,99,0.22
+Z024,Cheese Slices,Dairy,1 unit,99,0.22
+Z025,Ice Cream Tub 700ml,Dairy,250ml,499,0.12
+Z026,Buttermilk,Dairy,1kg,20,0.24
+Z027,White Bread,Bakery,500ml,499,0.29
+Z028,Brown Bread,Bakery,1kg,60,0.28
+Z029,Pav,Bakery,250ml,99,0.21
+Z030,Buns,Bakery,1kg,199,0.21
+Z031,Croissant,Bakery,1 unit,149,0.28
+Z032,Banana (6),Fruits & Veg,1 unit,299,0.23
+Z033,Tomato 1kg,Fruits & Veg,500ml,149,0.18
+Z034,Onion 1kg,Fruits & Veg,250ml,60,0.26
+Z035,Potato 1kg,Fruits & Veg,1 pack,299,0.17
+Z036,Apple 4pc,Fruits & Veg,1 unit,499,0.26
+Z037,Coriander,Fruits & Veg,1kg,99,0.25
+Z038,Lemon 4pc,Fruits & Veg,500ml,40,0.1
+Z039,Cucumber,Fruits & Veg,500ml,20,0.22
+Z040,Instant Noodles,Instant Food,500ml,499,0.08
+Z041,Cup Noodles,Instant Food,1 unit,199,0.29
+Z042,Ready Upma,Instant Food,500ml,499,0.13
+Z043,Instant Soup,Instant Food,250ml,60,0.22
+Z044,Frozen Samosa,Instant Food,1 pack,60,0.2
+Z045,Frozen Paratha,Instant Food,1 pack,40,0.25
+Z046,Dishwash Liquid,Household,500ml,20,0.27
+Z047,Detergent 1kg,Household,500ml,299,0.12
+Z048,Garbage Bags,Household,1 unit,149,0.27
+Z049,Tissue Roll,Household,500ml,199,0.23
+Z050,Mosquito Repellent,Household,1kg,499,0.21
+Z051,Batteries AA,Household,1 unit,199,0.28
+Z052,Shampoo 180ml,Personal Care,1 pack,20,0.28
+Z053,Toothpaste,Personal Care,1 pack,499,0.17
+Z054,Soap 4pk,Personal Care,1kg,99,0.14
+Z055,Sanitary Pads,Personal Care,1 pack,299,0.19
+Z056,Hand Wash,Personal Care,500ml,199,0.25
+Z057,Face Wash,Personal Care,250ml,40,0.2
+Z058,Umbrella,Rain Essentials,1 pack,99,0.19
+Z059,Raincoat,Rain Essentials,1 unit,499,0.27
+Z060,Premium Olive Oil 1L,Grocery,1kg,99,0.09
+Z061,Sunflower Oil 1L,Grocery,1 unit,299,0.21
+Z062,Sugar 1kg,Grocery,500ml,20,0.09
+Z063,Atta 5kg,Grocery,1kg,99,0.1
+Z064,Rice 5kg,Grocery,500ml,199,0.17
+Z065,Toor Dal 1kg,Grocery,1 pack,99,0.15
+Z066,Tea 250g,Grocery,500ml,99,0.09
+Z067,Coffee 100g,Grocery,1 pack,149,0.16

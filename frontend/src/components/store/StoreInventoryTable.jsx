@@ -147,12 +147,25 @@ export function StoreInventoryTable({
 
                     {/* 3. Backroom Stock */}
                     <td className="py-3.5 px-3">
-                      <div className="font-bold text-slate-900 text-xs">
-                        {backroom} <span className="text-[10px] font-normal text-slate-400">Units</span>
-                      </div>
-                      <span className="text-[10px] text-slate-500">
-                        {backroom > 0 ? `${backroom} available` : 'Depleted'}
-                      </span>
+                      {sku.backroom_stock_unknown ? (
+                        <div>
+                          <div className="font-medium text-slate-500 text-xs italic">
+                            Uncatalogued
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            Not in source CSV
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="font-bold text-slate-900 text-xs">
+                            {backroom} <span className="text-[10px] font-normal text-slate-400">Units</span>
+                          </div>
+                          <span className="text-[10px] text-slate-500">
+                            {backroom > 0 ? `${backroom} available` : 'Depleted'}
+                          </span>
+                        </div>
+                      )}
                     </td>
 
                     {/* 4. Total Physical Stock */}
@@ -160,7 +173,9 @@ export function StoreInventoryTable({
                       <div className="font-extrabold text-slate-900 text-xs">
                         {total} <span className="text-[10px] font-normal text-slate-400">Units</span>
                       </div>
-                      <span className="text-[10px] text-slate-400">Physical total</span>
+                      <span className="text-[10px] text-slate-400">
+                        {sku.backroom_stock_unknown ? 'Shelf stock only' : 'Physical total'}
+                      </span>
                     </td>
 
                     {/* 5. Safety Buffer & Reorder Point */}
@@ -235,8 +250,8 @@ export function StoreInventoryTable({
                           Shelf Full
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-[11px]">
-                          0 in Backroom
+                        <span className="text-slate-500 font-medium text-[11px]">
+                          {sku.backroom_stock_unknown ? `Deficit: ${spaceAvailable} Units` : '0 in Backroom'}
                         </span>
                       )}
                     </td>

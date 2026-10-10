@@ -167,10 +167,18 @@ export function deriveOperationalTasks(operationsData) {
       const backroomStock = sku.backroom_stock_units ?? 0
       const deficit = Math.max(0, shelfCap - shelfStock)
 
-      // Only generate task if replenishment is needed and backroom has stock
-      if ((sku.shelf_replenishment_needed || shelfStock === 0 || deficit > 0) && backroomStock > 0) {
-        const canReplenish = Math.min(deficit, backroomStock)
-        const isGhostStockout = shelfStock === 0 && backroomStock > 0
+      // Generate task if replenishment is needed and backroom has stock, or if backroom stock is uncatalogued in live data
+      const isBackroomUnknown = Boolean(sku.backroom_stock_unknown)
+      const shouldGenerate = (sku.shelf_replenishment_needed || shelfStock === 0 || deficit > 0) &&
+        (backroomStock > 0 || (isBackroomUnknown && shelfStock < (sku.safety_stock_threshold_units || 15)))
+
+      if (shouldGenerate) {
+        const canReplenish = isBackroomUnknown ? deficit : Math.min(deficit, backroomStock)
+        const isGhostStockout = shelfStock === 0
+
+        const detailsText = isBackroomUnknown
+          ? `Shelf: ${shelfStock}/${shelfCap} • Backroom: Unknown (Not in store_inventory.csv) • Deficit: ${deficit} units`
+          : `Shelf: ${shelfStock}/${shelfCap} • Backroom has ${backroomStock} units • Move ${canReplenish} units`
 
         tasks.push({
           id: `TASK_SHELF_${sku.sku_id}`,
@@ -185,7 +193,7 @@ export function deriveOperationalTasks(operationsData) {
           status: 'PENDING_FLOOR_ACTION',
           quantityUnits: canReplenish,
           timingInfo: 'Est. 10 mins floor transit',
-          details: `Shelf: ${shelfStock}/${shelfCap} • Backroom has ${backroomStock} units • Move ${canReplenish} units`,
+          details: detailsText,
           isGhostStockout,
           isActionable: false, // Informational / Floor staff execution item (no backend mutation endpoint)
           actionabilityLabel: 'Floor Execution (Monitored via IoT shelf telemetry)',

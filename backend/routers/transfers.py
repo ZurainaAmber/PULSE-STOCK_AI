@@ -13,6 +13,8 @@ try:
     from backend.models.inventory import StoreInventory
     from backend.models.action_log import ActionLog
     from backend.auth import get_current_user
+    from backend.ingestion import resolve_store_id
+    from backend.routers.forecast import SKU_LEGACY_MAP
 except ImportError:
     from database import get_db
     from models.transfer import StockTransferRequest
@@ -22,6 +24,8 @@ except ImportError:
     from models.inventory import StoreInventory
     from models.action_log import ActionLog
     from auth import get_current_user
+    from ingestion import resolve_store_id
+    from routers.forecast import SKU_LEGACY_MAP
 
 router = APIRouter(prefix="/api/v1/transfers", tags=["Stock Transfers"])
 
@@ -121,14 +125,15 @@ async def get_donors_for_sku(
     db: Session = Depends(get_db)
 ):
     """Find other stores with stock available for this SKU."""
+    canon_sku = SKU_LEGACY_MAP.get(sku_id, sku_id)
     inv_records = db.query(StoreInventory, Store)\
         .join(Store, StoreInventory.store_id == Store.store_id)\
         .filter(
-            StoreInventory.sku_id == sku_id,
+            StoreInventory.sku_id == canon_sku,
             StoreInventory.store_id != user.store_id,
-            StoreInventory.total_stock_units > 0
+            StoreInventory.shelf_stock_units > 0
         )\
-        .order_by(StoreInventory.total_stock_units.desc())\
+        .order_by(StoreInventory.shelf_stock_units.desc())\
         .limit(10)\
         .all()
 
@@ -139,12 +144,12 @@ async def get_donors_for_sku(
             "store_name": store.store_name,
             "location_zone": store.location_zone,
             "stadium_proximity_km": store.stadium_proximity_km,
-            "available_stock_units": inv.total_stock_units,
+            "available_stock_units": inv.shelf_stock_units,
             "shelf_stock_units": inv.shelf_stock_units,
             "backroom_stock_units": inv.backroom_stock_units
         })
 
-    return {"sku_id": sku_id, "donor_stores": donors}
+    return {"sku_id": canon_sku, "donor_stores": donors}
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_transfer_request(
@@ -154,36 +159,38 @@ async def create_transfer_request(
 ):
     """Manager A creates a stock transfer request to Manager B."""
     from_store_id = user.store_id  # Enforce server-side authorization
+    to_store_id = resolve_store_id(payload.to_store_id)
+    target_sku_id = SKU_LEGACY_MAP.get(payload.sku_id, payload.sku_id)
 
-    if payload.to_store_id == from_store_id:
+    if to_store_id == from_store_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot request a stock transfer from your own store."
         )
 
     # Validate target store exists
-    to_store = db.query(Store).filter(Store.store_id == payload.to_store_id).first()
+    to_store = db.query(Store).filter(Store.store_id == to_store_id).first()
     if not to_store:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Target donor store '{payload.to_store_id}' not found."
+            detail=f"Target donor store '{to_store_id}' not found."
         )
 
     # Validate SKU exists
-    sku = db.query(SKU).filter(SKU.sku_id == payload.sku_id).first()
+    sku = db.query(SKU).filter(SKU.sku_id == target_sku_id).first()
     if not sku:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product SKU '{payload.sku_id}' not found."
+            detail=f"Product SKU '{target_sku_id}' not found."
         )
 
     # Check donor inventory availability
     donor_inv = db.query(StoreInventory).filter(
-        StoreInventory.store_id == payload.to_store_id,
-        StoreInventory.sku_id == payload.sku_id
+        StoreInventory.store_id == to_store_id,
+        StoreInventory.sku_id == target_sku_id
     ).first()
 
-    if not donor_inv or donor_inv.total_stock_units <= 0:
+    if not donor_inv or donor_inv.shelf_stock_units <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Target store {to_store.store_name} currently has 0 units of {sku.sku_name}."
@@ -195,8 +202,8 @@ async def create_transfer_request(
     trf = StockTransferRequest(
         transfer_id=transfer_id,
         from_store_id=from_store_id,
-        to_store_id=payload.to_store_id,
-        sku_id=payload.sku_id,
+        to_store_id=to_store_id,
+        sku_id=target_sku_id,
         requested_quantity=payload.requested_quantity,
         status="PENDING",
         notes=payload.notes,

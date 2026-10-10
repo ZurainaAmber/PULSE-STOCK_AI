@@ -1,0 +1,6 @@
+date,time,event_type,category,expected_uplift
+2026-11-13,19:30,"Cricket match (T20, India)",Beverages,1.2
+2026-11-13,19:30,"Cricket match (T20, India)",Snacks,1.2
+2026-11-16,19:30,"Cricket match (T20, India)",Beverages,1.2
+2026-11-16,19:30,"Cricket match (T20, India)",Snacks,0.8
+2026-11-10,All day,Weekend,All,0.15

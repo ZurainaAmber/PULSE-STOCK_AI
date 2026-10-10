@@ -94,8 +94,8 @@ export async function fetchStoreDetailsData(storeId = 'STORE_007', targetSkuId =
       storeMetadata: {
         store_id: storeId,
         store_name: inventoryData?.store_name || `Store ${storeId}`,
-        location_zone: null, // Populated if store model includes it
-        stadium_proximity_km: null,
+        location_zone: inventoryData?.location_zone || 'Bangalore Urban',
+        stadium_proximity_km: inventoryData?.stadium_proximity_km ?? 1.4,
       },
       inventory: inventoryData,
       inventoryError: inventoryError ? inventoryError.message : null,

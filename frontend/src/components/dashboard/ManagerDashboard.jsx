@@ -245,10 +245,10 @@ export function ManagerDashboard({ selectedStoreId = 'STORE_007' }) {
   const requiredRiders = riderFleetData?.required_riders_for_demand ?? riderFleetData?.required_riders ?? null
   const riderSurge = riderFleetData?.rider_surge_multiplier ?? null
 
-  // 6. Network Scope (Distinguishing mock 30-store master vs live /alerts/stockouts total):
+  // 6. Network Scope (Distinguishing mock 30-store master vs live 12 covered dark stores):
   const networkHealthData = dataSourceMode === 'mock'
     ? { atRiskCount: alerts.length, totalStores: 30, stableStores: Math.max(0, 30 - alerts.length), isLive: false }
-    : { atRiskCount: alerts.length, totalStores: null, stableStores: null, isLive: true }
+    : { atRiskCount: alerts.length, totalStores: 12, stableStores: Math.max(0, 12 - alerts.length), isLive: true }
 
   // 7. Dynamic Subtitles:
   const criticalCount = alerts.filter((a) => a.severity === 'CRITICAL').length
@@ -270,7 +270,7 @@ export function ManagerDashboard({ selectedStoreId = 'STORE_007' }) {
 
   const networkSubtitle = dataSourceMode === 'mock'
     ? `${alerts.length} dark stores at risk (Mock Network Master)`
-    : `Derived from live GET /alerts/stockouts`
+    : `12 Covered Dark Stores (Challenge 06 Dataset)`
 
   return (
     <div className="space-y-6">
