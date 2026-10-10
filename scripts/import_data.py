@@ -45,11 +45,18 @@ def import_all():
     print(" PulseStock AI - Database Import Engine")
     print("==================================================")
 
-    # Recreate tables to ensure SQLite schema matches updated models
-    print("Synchronizing database table schemas...")
-    Base.metadata.drop_all(bind=engine)
+    # Ensure tables exist without dropping existing schema or data
+    print("Ensuring database table schemas exist...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
+
+    # Safety Guard: Refuse to drop or overwrite existing data
+    existing_store_count = db.query(Store).count()
+    existing_sku_count = db.query(SKU).count()
+    if existing_store_count > 0 or existing_sku_count > 0:
+        print(f"[SAFETY ABORT] Database already contains data ({existing_store_count} stores, {existing_sku_count} SKUs).")
+        print("Refusing to drop or overwrite existing tables/data. Import aborted.")
+        return
 
     try:
         # 2. Import Stores

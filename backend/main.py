@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 try:
     from backend.config import settings
     from backend.database import init_db
+    from backend.auth import seed_demo_users_if_needed
     from backend.routers import (
         health_router,
         alerts_router,
@@ -16,10 +17,13 @@ try:
         recommendations_router,
         actions_router,
         simulation_router,
+        auth_router,
+        transfers_router,
     )
 except ImportError:
     from config import settings
     from database import init_db
+    from auth import seed_demo_users_if_needed
     from routers import (
         health_router,
         alerts_router,
@@ -31,12 +35,15 @@ except ImportError:
         recommendations_router,
         actions_router,
         simulation_router,
+        auth_router,
+        transfers_router,
     )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle manager to initialize database tables on server startup."""
     init_db()
+    seed_demo_users_if_needed()
     yield
 
 app = FastAPI(
@@ -68,6 +75,8 @@ app.include_router(logistics_router)
 app.include_router(recommendations_router)
 app.include_router(actions_router)
 app.include_router(simulation_router)
+app.include_router(auth_router)
+app.include_router(transfers_router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    
+    /* PulseStock AI Enterprise Palette: Dark Teal & Mint Green */
+    --color-primary: #0f766e;
+    --color-primary-hover: #115e59;
+    --color-primary-light: #f0fdf9;
+    
+    --color-mint: #10b981;
+    --color-mint-hover: #059669;
+    --color-mint-light: #ecfdf5;
+    --color-mint-border: #a7f3d0;
+    
+    --color-sidebar-bg: #04201e;
+    --color-sidebar-surface: #072a27;
+    --color-sidebar-border: #0b3b38;
+    --color-sidebar-active: #0d4642;
+    --color-sidebar-text: #e2f4f2;
+    --color-sidebar-muted: #80ada8;
+    
+    --color-danger: #ef4444;
+    --color-danger-light: #fef2f2;
+    --color-danger-border: #fecaca;
+    
+    --color-warning: #f59e0b;
+    --color-warning-light: #fffbeb;
+    --color-warning-border: #fde68a;
+    
+    --color-success: #10b981;
+    --color-success-light: #ecfdf5;
+    --color-success-border: #a7f3d0;
+    
+    --color-info: #0284c7;
+    --color-info-light: #f0f9ff;
+    --color-info-border: #bae6fd;
+    
+    --bg-app: #f7faf9;
+    --bg-card: #ffffff;
+    --border-subtle: #e2e8f0;
+    --border-light: #f1f5f9;
+    
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-subtle: #94a3b8;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom Scrollbar for clean dashboards */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Card Surface Utilities */
+.surface-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+}
+
+.surface-card-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.surface-card-hover:hover {
+  box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
+}
+
+/* Custom range slider styling for simulation */
+input[type='range'] {
+  accent-color: #0d9488;
+}
+

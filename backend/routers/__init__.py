@@ -9,6 +9,8 @@ try:
     from backend.routers.recommendations import router as recommendations_router
     from backend.routers.actions import router as actions_router
     from backend.routers.simulation import router as simulation_router
+    from backend.routers.auth import router as auth_router
+    from backend.routers.transfers import router as transfers_router
 except ImportError:
     from routers.health import router as health_router
     from routers.alerts import router as alerts_router
@@ -20,6 +22,8 @@ except ImportError:
     from routers.recommendations import router as recommendations_router
     from routers.actions import router as actions_router
     from routers.simulation import router as simulation_router
+    from routers.auth import router as auth_router
+    from routers.transfers import router as transfers_router
 
 __all__ = [
     "health_router",
@@ -32,4 +36,6 @@ __all__ = [
     "recommendations_router",
     "actions_router",
     "simulation_router",
+    "auth_router",
+    "transfers_router",
 ]
