@@ -11,6 +11,7 @@ import {
 import { fetchStoreDetailsData } from '../../services/storeService'
 import { getDataSourceMode } from '../../api/client'
 import { StoreOverviewCard } from './StoreOverviewCard'
+import { StoreRidersCard } from './StoreRidersCard'
 import { StoreInventoryTable } from './StoreInventoryTable'
 import { DemandForecastChart } from './DemandForecastChart'
 import { ActiveEventsCard } from './ActiveEventsCard'
@@ -138,7 +139,17 @@ export function StoreDetailsDashboard({
         onSelectStore={onSelectStore}
         alerts={storeData?.alerts}
         inventory={storeData?.inventory}
+        riders={storeData?.riders}
         dataSourceMode={dataSourceMode}
+      />
+
+      {/* 2. Dark Store Courier Fleet & Roster Section */}
+      <StoreRidersCard
+        riders={storeData?.riders}
+        isLoading={isLoading}
+        error={storeData?.ridersError}
+        storeId={selectedStoreId}
+        onRetry={() => loadStoreDetails()}
       />
 
       {/* 2. Physical Inventory & SKU Stock Ledger */}

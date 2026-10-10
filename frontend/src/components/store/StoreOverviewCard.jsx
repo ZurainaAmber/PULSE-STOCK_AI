@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Store,
   MapPin,
@@ -8,7 +7,8 @@ import {
   Boxes,
   Package,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Bike
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../common/Card'
 import { Badge } from '../common/Badge'
@@ -20,9 +20,21 @@ export function StoreOverviewCard({
   onSelectStore,
   alerts = [],
   inventory = null,
+  riders = null,
   dataSourceMode = 'mock',
 }) {
   const availableStores = MOCK_STORES
+
+  const scrollToRiders = () => {
+    const el = document.getElementById('store-riders-section')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      el.classList.add('ring-2', 'ring-teal-500/40')
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-teal-500/40')
+      }, 1500)
+    }
+  }
 
   // Compute store-level health metrics
   const activeAlert = alerts.find((a) => a.store_id === selectedStoreId) || alerts[0]
@@ -50,6 +62,9 @@ export function StoreOverviewCard({
   })
 
   const shelfFillRate = totalCap > 0 ? Math.round((totalShelf / totalCap) * 100) : null
+
+  const activeCouriers = riders?.active_riders ?? riders?.available_riders ?? null
+  const shortageCount = riders?.rider_shortage_count ?? null
 
   const severityBadgeVariants = {
     CRITICAL: 'danger',
@@ -133,7 +148,7 @@ export function StoreOverviewCard({
 
       {/* Bottom Health Bar Metrics */}
       <CardContent className="p-4 pt-3.5">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
           
           {/* Active Alerts */}
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-0.5">
@@ -198,9 +213,34 @@ export function StoreOverviewCard({
               {ghostStockoutCount > 0 ? `${ghostStockoutCount} SKUs` : '0 (Clear)'}
             </div>
             <span className="text-[10px] text-slate-500">
-              {ghostStockoutCount > 0 ? 'Shelf empty with backroom stock' : 'No shelf-backroom bottlenecks'}
+              {ghostStockoutCount > 0 ? 'Shelf empty with backroom stock' : 'No shelf bottlenecks'}
             </span>
           </div>
+
+          {/* Active Courier Fleet - Clickable to #store-riders-section */}
+          <button
+            type="button"
+            id="overview-fleet-card"
+            onClick={scrollToRiders}
+            title="Click to view Dark Store Courier Fleet & Roster"
+            className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-teal-400 hover:bg-teal-50/40 transition-all text-left space-y-0.5 cursor-pointer group shadow-2xs"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-slate-400 group-hover:text-teal-700 tracking-wider">
+                Courier Fleet
+              </span>
+              <Bike className="w-3.5 h-3.5 text-teal-600 opacity-70 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="text-xl font-black text-slate-900 tracking-tight group-hover:text-teal-950 flex items-center gap-1">
+              <span>{activeCouriers !== null && activeCouriers !== undefined ? activeCouriers : '—'}</span>
+              <span className="text-xs font-normal text-slate-400 group-hover:text-teal-600">Active</span>
+            </div>
+            <span className="text-[10px] text-teal-700 font-medium flex items-center gap-0.5 group-hover:underline">
+              {shortageCount && shortageCount > 0
+                ? `${shortageCount} short • Inspect →`
+                : 'View roster & status →'}
+            </span>
+          </button>
 
         </div>
       </CardContent>

@@ -59,6 +59,7 @@ export async function fetchStoreDetailsData(storeId = 'STORE_007', targetSkuId =
       warehouseRes,
       donorsRes,
       trucksRes,
+      ridersRes,
     ] = await Promise.allSettled([
       apiClient(API_ENDPOINTS.ALERTS, { params: { store_id: storeId } }),
       apiClient(API_ENDPOINTS.FORECAST_HOURLY, {
@@ -70,6 +71,7 @@ export async function fetchStoreDetailsData(storeId = 'STORE_007', targetSkuId =
         params: { store_id: storeId, sku_id: primarySkuId, required_units: 50 },
       }),
       apiClient(API_ENDPOINTS.LOGISTICS_TRUCKS, { params: { store_id: storeId } }),
+      apiClient(API_ENDPOINTS.LOGISTICS_RIDERS, { params: { store_id: storeId } }),
     ])
 
     const alertsData = alertsRes.status === 'fulfilled' ? alertsRes.value : null
@@ -78,6 +80,7 @@ export async function fetchStoreDetailsData(storeId = 'STORE_007', targetSkuId =
     const warehouseData = warehouseRes.status === 'fulfilled' ? warehouseRes.value : null
     const donorsData = donorsRes.status === 'fulfilled' ? donorsRes.value : null
     const trucksData = trucksRes.status === 'fulfilled' ? trucksRes.value : null
+    const ridersData = ridersRes.status === 'fulfilled' ? ridersRes.value : null
 
     const rawAlerts = Array.isArray(alertsData?.alerts) ? alertsData.alerts : []
     const normalizedAlerts = rawAlerts.map(normalizeAlert)
@@ -109,6 +112,8 @@ export async function fetchStoreDetailsData(storeId = 'STORE_007', targetSkuId =
       warehouse: warehouseData,
       donors: donorsData?.donor_stores || [],
       trucks: trucksData,
+      riders: ridersData,
+      ridersError: ridersRes.status === 'rejected' ? (ridersRes.reason?.message || 'Failed to fetch rider fleet') : null,
       timestamp: new Date().toISOString(),
     }
   } catch (err) {
@@ -126,6 +131,8 @@ export async function fetchStoreDetailsData(storeId = 'STORE_007', targetSkuId =
       warehouse: null,
       donors: [],
       trucks: null,
+      riders: null,
+      ridersError: err.message,
       timestamp: new Date().toISOString(),
     }
   }
@@ -179,6 +186,94 @@ function getMockStoreDetails(storeId, targetSkuId) {
         transit_duration_minutes: MOCK_LOGISTICS_STATUS.warehouse.expedited_eta_minutes,
         additional_expedited_cost_inr: MOCK_LOGISTICS_STATUS.warehouse.expedited_cost_inr,
       },
+    },
+    riders: {
+      store_id: storeId,
+      active_riders: storeId === 'STORE_007' ? 3 : 8,
+      total_assigned_riders: storeId === 'STORE_007' ? 9 : 8,
+      available_riders_count: storeId === 'STORE_007' ? 2 : 8,
+      on_delivery_riders_count: storeId === 'STORE_007' ? 1 : 0,
+      offline_riders_count: storeId === 'STORE_007' ? 6 : 0,
+      required_riders_for_demand: storeId === 'STORE_007' ? 9 : 5,
+      rider_shortage_count: storeId === 'STORE_007' ? 6 : 0,
+      shortage_severity: storeId === 'STORE_007' ? 'HIGH' : 'NONE',
+      rider_surge_multiplier: storeId === 'STORE_007' ? 1.35 : 1.0,
+      transfer_rider_available: true,
+      assigned_rider_id: storeId === 'STORE_007' ? 'RIDER_DEV_88' : `RIDER_${storeId}_01`,
+      orders_per_rider_hour: 4.0,
+      rider_capacity_order_lines: storeId === 'STORE_007' ? 12 : 32,
+      data_provenance: 'MOCK_CONTRACT_FIXTURE',
+      riders: storeId === 'STORE_007' ? [
+        {
+          rider_id: 'RIDER_DEV_88',
+          name: 'Courier Dev 88',
+          status: 'ON_DELIVERY',
+          assignment_type: 'INTER_STORE_TRANSFER',
+          current_assignment: 'In-Transit Transfer from Store 3 (TRF_007_01)',
+          destination_store_id: 'STORE_007',
+          sku_id: 'SKU_COLD_DRINK_750ML',
+          units: 50,
+          eta_minutes: 28,
+          orders_per_rider_hour: 4.0,
+          assigned_store_id: storeId,
+          data_provenance: 'SIMULATED_MOCK_ROSTER',
+        },
+        {
+          rider_id: 'RIDER_007_02',
+          name: 'Courier Koramangala-02',
+          status: 'AVAILABLE',
+          assignment_type: 'LOCAL_DELIVERY_POOL',
+          current_assignment: 'Standby for Hyper-local Delivery & Inter-Store Transfers',
+          destination_store_id: null,
+          sku_id: null,
+          units: null,
+          eta_minutes: null,
+          orders_per_rider_hour: 4.0,
+          assigned_store_id: storeId,
+          data_provenance: 'SIMULATED_MOCK_ROSTER',
+        },
+        {
+          rider_id: 'RIDER_007_03',
+          name: 'Courier Koramangala-03',
+          status: 'AVAILABLE',
+          assignment_type: 'LOCAL_DELIVERY_POOL',
+          current_assignment: 'Standby for Hyper-local Delivery & Inter-Store Transfers',
+          destination_store_id: null,
+          sku_id: null,
+          units: null,
+          eta_minutes: null,
+          orders_per_rider_hour: 4.0,
+          assigned_store_id: storeId,
+          data_provenance: 'SIMULATED_MOCK_ROSTER',
+        },
+        ...Array.from({ length: 6 }).map((_, i) => ({
+          rider_id: `RIDER_007_${String(i + 4).padStart(2, '0')}`,
+          name: `Courier Koramangala-${String(i + 4).padStart(2, '0')}`,
+          status: 'OFFLINE',
+          assignment_type: 'UNSTAFFED_SHIFT',
+          current_assignment: 'Unstaffed Shift Deficit (High Rain Shortage)',
+          destination_store_id: null,
+          sku_id: null,
+          units: null,
+          eta_minutes: null,
+          orders_per_rider_hour: 4.0,
+          assigned_store_id: storeId,
+          data_provenance: 'SIMULATED_MOCK_ROSTER',
+        })),
+      ] : Array.from({ length: 8 }).map((_, i) => ({
+        rider_id: `RIDER_${storeId}_${String(i + 1).padStart(2, '0')}`,
+        name: `Courier ${storeId}-${String(i + 1).padStart(2, '0')}`,
+        status: 'AVAILABLE',
+        assignment_type: 'LOCAL_DELIVERY_POOL',
+        current_assignment: 'Standby for Hyper-local Delivery',
+        destination_store_id: null,
+        sku_id: null,
+        units: null,
+        eta_minutes: null,
+        orders_per_rider_hour: 4.0,
+        assigned_store_id: storeId,
+        data_provenance: 'SIMULATED_MOCK_ROSTER',
+      })),
     },
     timestamp: new Date().toISOString(),
   }

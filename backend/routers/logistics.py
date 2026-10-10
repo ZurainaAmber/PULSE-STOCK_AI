@@ -160,10 +160,65 @@ async def get_rider_availability(
                       .order_by(RiderAvailability.timestamp.desc())\
                       .first()
 
+    try:
+        from backend.models.transfer import StockTransferRequest
+    except ImportError:
+        from models.transfer import StockTransferRequest
+
+    # Check for active in-transit transfers linked to this store
+    active_transfers = []
+    try:
+        active_transfers = db.query(StockTransferRequest).filter(
+            StockTransferRequest.status == "IN_TRANSIT",
+            (StockTransferRequest.from_store_id == canonical_store) | (StockTransferRequest.to_store_id == canonical_store)
+        ).all()
+    except Exception:
+        active_transfers = []
+
     if not rider_rec:
+        on_delivery = min(len(active_transfers), 6)
+        fallback_riders = []
+        for i in range(1, 7):
+            r_id = f"RIDER_{canonical_store}_{i:02d}"
+            if i <= on_delivery and len(active_transfers) >= i:
+                trf = active_transfers[i - 1]
+                fallback_riders.append({
+                    "rider_id": r_id,
+                    "name": f"Courier {to_dataset_store_id(canonical_store) or canonical_store}-{i:02d}",
+                    "status": "ON_DELIVERY",
+                    "assignment_type": "INTER_STORE_TRANSFER",
+                    "current_assignment": f"Transfer {trf.transfer_id}",
+                    "transfer_id": trf.transfer_id,
+                    "destination_store_id": trf.from_store_id if trf.to_store_id == canonical_store else trf.to_store_id,
+                    "sku_id": trf.sku_id,
+                    "units": trf.approved_quantity or trf.requested_quantity,
+                    "eta_minutes": trf.eta_minutes or 25,
+                    "orders_per_rider_hour": 6.0,
+                    "assigned_store_id": canonical_store,
+                    "data_provenance": "SIMULATED_ROSTER"
+                })
+            else:
+                fallback_riders.append({
+                    "rider_id": r_id,
+                    "name": f"Courier {to_dataset_store_id(canonical_store) or canonical_store}-{i:02d}",
+                    "status": "AVAILABLE",
+                    "assignment_type": "LOCAL_DELIVERY_POOL",
+                    "current_assignment": "Standby for Hyper-local Delivery & Inter-Store Transfers",
+                    "destination_store_id": None,
+                    "sku_id": None,
+                    "units": None,
+                    "eta_minutes": None,
+                    "orders_per_rider_hour": 6.0,
+                    "assigned_store_id": canonical_store,
+                    "data_provenance": "SIMULATED_ROSTER"
+                })
         return {
             "store_id": canonical_store,
             "active_riders": 6,
+            "total_assigned_riders": 6,
+            "available_riders_count": max(0, 6 - on_delivery),
+            "on_delivery_riders_count": on_delivery,
+            "offline_riders_count": 0,
             "orders_per_rider_hour": 6.0,
             "rider_capacity_order_lines": 36,
             "required_riders_for_demand": 6,
@@ -172,19 +227,88 @@ async def get_rider_availability(
             "rider_surge_multiplier": 1.0,
             "transfer_rider_available": True,
             "assigned_rider_id": f"RIDER_{canonical_store}_01",
-            "data_provenance": "OFFICIAL_DATASET" if covered else "UNCOVERED_STORE"
+            "data_provenance": "OFFICIAL_DATASET" if covered else "UNCOVERED_STORE",
+            "riders": fallback_riders
         }
 
     avail = rider_rec.available_riders
     rate = rider_rec.orders_per_rider_hour
     capacity_order_lines = int(avail * rate)
     shortage = rider_rec.rider_shortage_count
+    required = rider_rec.required_riders
+    total_assigned = max(avail, required)
+
+    on_delivery_count = min(len(active_transfers), avail)
+    available_count = max(0, avail - on_delivery_count)
+    offline_count = max(0, total_assigned - avail)
+
+    riders_list = []
+    # 1. On delivery riders
+    for idx in range(on_delivery_count):
+        num = idx + 1
+        trf = active_transfers[idx]
+        dest_store = trf.from_store_id if trf.to_store_id == canonical_store else trf.to_store_id
+        riders_list.append({
+            "rider_id": f"RIDER_{canonical_store}_{num:02d}",
+            "name": f"Courier {to_dataset_store_id(canonical_store) or canonical_store}-{num:02d}",
+            "status": "ON_DELIVERY",
+            "assignment_type": "INTER_STORE_TRANSFER",
+            "current_assignment": f"In-Transit Stock Transfer ({trf.transfer_id})",
+            "transfer_id": trf.transfer_id,
+            "destination_store_id": dest_store,
+            "sku_id": trf.sku_id,
+            "units": trf.approved_quantity or trf.requested_quantity,
+            "eta_minutes": trf.eta_minutes or 25,
+            "orders_per_rider_hour": rate,
+            "assigned_store_id": canonical_store,
+            "data_provenance": "SIMULATED_ROSTER"
+        })
+
+    # 2. Available riders
+    for idx in range(available_count):
+        num = on_delivery_count + idx + 1
+        riders_list.append({
+            "rider_id": f"RIDER_{canonical_store}_{num:02d}",
+            "name": f"Courier {to_dataset_store_id(canonical_store) or canonical_store}-{num:02d}",
+            "status": "AVAILABLE",
+            "assignment_type": "LOCAL_DELIVERY_POOL",
+            "current_assignment": "Standby for Hyper-local Delivery & Inter-Store Transfers",
+            "destination_store_id": None,
+            "sku_id": None,
+            "units": None,
+            "eta_minutes": None,
+            "orders_per_rider_hour": rate,
+            "assigned_store_id": canonical_store,
+            "data_provenance": "SIMULATED_ROSTER"
+        })
+
+    # 3. Offline / Deficit riders
+    for idx in range(offline_count):
+        num = avail + idx + 1
+        riders_list.append({
+            "rider_id": f"RIDER_{canonical_store}_{num:02d}",
+            "name": f"Courier {to_dataset_store_id(canonical_store) or canonical_store}-{num:02d}",
+            "status": "OFFLINE",
+            "assignment_type": "UNSTAFFED_SHIFT",
+            "current_assignment": f"Unstaffed Shift Deficit ({rider_rec.shortage_severity} Shortage)",
+            "destination_store_id": None,
+            "sku_id": None,
+            "units": None,
+            "eta_minutes": None,
+            "orders_per_rider_hour": rate,
+            "assigned_store_id": canonical_store,
+            "data_provenance": "SIMULATED_ROSTER"
+        })
 
     return {
         "store_id": canonical_store,
         "dataset_code": to_dataset_store_id(canonical_store),
         "reference_time": SNAPSHOT_REFERENCE_TIME.isoformat() + "Z",
         "active_riders": avail,
+        "total_assigned_riders": total_assigned,
+        "available_riders_count": available_count,
+        "on_delivery_riders_count": on_delivery_count,
+        "offline_riders_count": offline_count,
         "orders_per_rider_hour": rate,
         "rider_capacity_order_lines": capacity_order_lines,
         "required_riders_for_demand": rider_rec.required_riders,
@@ -193,5 +317,6 @@ async def get_rider_availability(
         "rider_surge_multiplier": 1.4 if shortage >= 3 else (1.2 if shortage > 0 else 1.0),
         "transfer_rider_available": avail >= 2,
         "assigned_rider_id": f"RIDER_{canonical_store}_01" if avail > 0 else None,
-        "data_provenance": "OFFICIAL_DATASET" if covered else "UNCOVERED_STORE"
+        "data_provenance": "OFFICIAL_DATASET" if covered else "UNCOVERED_STORE",
+        "riders": riders_list
     }
