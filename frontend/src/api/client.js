@@ -2,7 +2,7 @@
  * PulseStock AI - API Client Layer
  * 
  * Base fetch client configured strictly according to contracts/api-spec.md:
- * - Base URL: http://localhost:8000/api/v1
+ * - Base URL: Configurable via import.meta.env.VITE_API_BASE_URL (defaults to http://localhost:8000/api/v1)
  * - Standard JSON headers
  * - RFC 7807 compliant error handling
  * - Clean separation between live backend and mock mode
@@ -62,7 +62,9 @@ export class ApiError extends Error {
  * Build URL with query parameters
  */
 function buildUrl(endpoint, params = {}) {
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000';
+  const url = new URL(`${API_BASE_URL}${normalizedEndpoint}`, base);
   Object.entries(params).forEach(([key, val]) => {
     if (val !== undefined && val !== null) {
       url.searchParams.append(key, val);

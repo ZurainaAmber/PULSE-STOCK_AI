@@ -10,7 +10,10 @@
  * DO NOT modify these constants without updating the authoritative contracts.
  */
 
-export const API_BASE_URL = 'http://localhost:8000/api/v1';
+const rawApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').trim().replace(/\/+$/, '');
+export const API_BASE_URL = rawApiBaseUrl.endsWith('/api/v1')
+  ? rawApiBaseUrl
+  : `${rawApiBaseUrl}/api/v1`;
 
 export const API_ENDPOINTS = {
   HEALTH: '/health',
